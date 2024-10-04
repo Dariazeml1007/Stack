@@ -10,7 +10,10 @@ int main()
 
     StackElem_t POISON = 666.13;
     stack_ctor (&stk, 10, POISON);
+    stack_push (&stk, 11);
     STACK_DUMP(&stk);
+
+
 
     for (int i = 0; i < 100; i++)
         stack_push (&stk, i);
@@ -20,7 +23,8 @@ int main()
     for (int i = 0; i < 70; i++)
         stack_pop (&stk, &x);
 
-    printf("%lf\n", x);
+
+
     STACK_DUMP(&stk);
 
     memory_report(&stk, FREE_);

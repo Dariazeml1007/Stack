@@ -70,6 +70,13 @@ void stack_assert_func(Stack_t *stk)
         assert(0);
     }
 
+    if (*stk->left_canary != DED || *stk->right_canary != EDA)
+    {
+        fputs("Values were damaged", stk->dump_file);
+        dtor(stk);
+        assert(0);
+    }
+
 }
 
 void stack_dump (Stack_t *stk, int line, const char* file)
@@ -77,7 +84,7 @@ void stack_dump (Stack_t *stk, int line, const char* file)
     fprintf (stk->dump_file, "=========================================\n"
                              "file : %s\n"
                              "line : %d\n"
-                             "stack_t : ox%p\n"
+                             "stack_structure : 0x%p\n"
                              "capacity : %u\n"
                              "size : %u\n"
                              "hash : %lu\n",
@@ -91,14 +98,16 @@ void stack_dump (Stack_t *stk, int line, const char* file)
 
     if (stk->data)
     {
-        fprintf (stk->dump_file, "stack : 0x%p\n", stk->data);
+        fprintf (stk->dump_file, "stack : 0x%p\nleft_canary : 0x%p value : %d\n", stk->data, stk->left_canary, *stk->left_canary);
         for (size_t i = 0; i < stk -> capacity; i++)
         {
             if (i < stk->size)
-                fprintf (stk->dump_file, "*data[%u] = %f\n", i, stk->data[i]);
+                fprintf (stk->dump_file, "*data[%u] = %f  address = 0x%p\n", i, stk->data[i], stk->data + i);
             else
-                fprintf (stk->dump_file, "data[%u] = %f\n", i, stk->data[i]);
+                fprintf (stk->dump_file, "data[%u] = %f address = 0x%p\n", i, stk->data[i], stk->data + i);
         }
+        fprintf (stk->dump_file, "right_canary : 0x%p value : %d\n", stk->right_canary, *stk->right_canary);
+
     }
 }
 

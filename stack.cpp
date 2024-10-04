@@ -8,54 +8,35 @@
 #include "stack.h"
 #include "check.h"
 
-unsigned long hash (Stack_t *stk)
-{
-    assert(stk);
-
-    size_t hash_val = 5381;
-    for (size_t i = 0; i < stk->size * sizeof(stk->data[0]); i++)
-    {
-        char c = *((char *)stk->data + i);
-        hash_val = ((hash_val << 5) + hash_val) + c;
-
-    }
-    return hash_val;
-}
-
-bool check_hash (Stack_t *stk)
-{
-    if (hash(stk) != stk->hash_current)
-    {
-        STACK_DUMP(stk);
-        fputs ("!!!Values have been damaged!!!", stk->dump_file);
-        return false;
-    }
-    return true;
-}
-
 void stack_ctor (Stack_t *stk, int capacity, StackElem_t poison_value)
 {
     assert(stk);
 
-    stk->dump_file = fopen("dump_file.txt", "w");
-    stk->memory_report_file = fopen("memory_file.txt", "w");
+    stk->dump_file          = fopen("dump_file.log", "w");
+    stk->memory_report_file = fopen("memory_file.log", "w");
 
-    stk->data = (StackElem_t*) calloc (capacity, sizeof(StackElem_t));
+    stk->data = (StackElem_t*) calloc (capacity + 2, sizeof(StackElem_t));
 
     if (stk->data)
     {
-    stk->capacity = capacity;
-    stk->size = 0;
-    stk->hash_current = hash(stk);
-    stk->poison = poison_value;
-    }
+    stk->left_canary  = (Canary_t*)stk->data;
 
+    stk->data         = stk->data + 1;
+    stk->capacity     = capacity;
+    stk->size         = 0;
+    stk->hash_current = hash(stk);
+    stk->poison       = poison_value;
+
+    stk->right_canary = (Canary_t*) (stk->data + capacity);
+    }
     else
     {
         fputs("Memory allocation\n", stk->dump_file);
         assert(0);
     }
 
+    *stk->left_canary  = (StackElem_t) 3565;
+    *stk->right_canary = (StackElem_t) 3802;
 
     for ( size_t i = 0; i < stk->capacity; i++)
         stk->data[i] = stk->poison;
@@ -96,12 +77,24 @@ void change_stack_capacity (Stack_t *stk, Change_t change)
         assert(0);
     }
 
-    stk->data = (StackElem_t*) realloc (stk->data, stk->capacity * sizeof(StackElem_t));
+    StackElem_t *new_stack_pointer = (StackElem_t*) realloc (stk->data - 1, (stk->capacity + 2) * sizeof(StackElem_t));
 
-    if (!stk->data)
+    if (!new_stack_pointer)
     {
-        stack_assert_func(stk);
+        fprintf (stk->dump_file, "Memory Allocation\n");
+        STACK_DUMP(stk);
+        dtor(stk);
+        assert(0);
     }
+
+    stk->data = new_stack_pointer;
+
+    stk->left_canary = (Canary_t*)stk->data;
+    stk->data += 1;
+    stk->right_canary = (Canary_t*) (stk->data + stk->capacity);
+
+    *stk->left_canary  = (StackElem_t) DED;
+    *stk->right_canary = (StackElem_t) EDA;
 
     for (size_t i = stk->size ; i < stk->capacity; i++)
         stk->data[i] = stk->poison;
@@ -138,4 +131,29 @@ void stack_push (Stack_t *stk, StackElem_t elem)
     stk->size++;
 
     stk->hash_current = hash(stk);
+}
+
+unsigned long hash (Stack_t *stk)
+{
+    assert(stk);
+
+    size_t hash_val = 5381;
+    for (size_t i = 0; i < stk->size * sizeof(stk->data[0]); i++)
+    {
+        char c = *((char *)stk->data + i);
+        hash_val = ((hash_val << 5) + hash_val) + c;
+
+    }
+    return hash_val;
+}
+
+bool check_hash (Stack_t *stk)
+{
+    if (hash(stk) != stk->hash_current)
+    {
+        STACK_DUMP(stk);
+        fputs ("!!!Values have been damaged!!!", stk->dump_file);
+        return false;
+    }
+    return true;
 }
