@@ -12,8 +12,14 @@ void stack_ctor (Stack_t *stk, int capacity, StackElem_t poison_value)
 {
     assert(stk);
 
-    stk->dump_file          = fopen("dump_file.log", "w");
+    stk->dump_file          = fopen("dump_file.log", "w"); // check if file opened AAAAAAAAAAAAAAa
     stk->memory_report_file = fopen("memory_file.log", "w");
+
+    if (!stk->dump_file || !stk->memory_report_file)
+    {
+        printf ("One or two files hasn't opened");
+        assert(0);
+    }
 
     stk->data = (StackElem_t*) calloc (capacity + 2, sizeof(StackElem_t));
 
@@ -35,8 +41,8 @@ void stack_ctor (Stack_t *stk, int capacity, StackElem_t poison_value)
         assert(0);
     }
 
-    *stk->left_canary  = (StackElem_t) 3565;
-    *stk->right_canary = (StackElem_t) 3802;
+    *stk->left_canary  = (StackElem_t) DED;
+    *stk->right_canary = (StackElem_t) EDA;
 
     for ( size_t i = 0; i < stk->capacity; i++)
         stk->data[i] = stk->poison;
@@ -52,7 +58,7 @@ void dtor (Stack_t *stk)
 
     if (fclose (stk->dump_file) || fclose (stk->memory_report_file))
     {
-        fputs ("File hasn't closed\n", stk->dump_file);
+        fputs ("One or two files haven't closed\n", stk->dump_file);
         assert(0);
     }
 
@@ -152,7 +158,7 @@ bool check_hash (Stack_t *stk)
     if (hash(stk) != stk->hash_current)
     {
         STACK_DUMP(stk);
-        fputs ("!!!Values have been damaged!!!", stk->dump_file);
+        fputs ("Values were damaged\n", stk->dump_file);
         return false;
     }
     return true;

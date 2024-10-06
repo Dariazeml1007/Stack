@@ -23,7 +23,7 @@ void memory_report (Stack_t *stk, Status_of_change status)
                                               stk->capacity);
             break;
         }
-    case AFTER_CHANGE :
+        case AFTER_CHANGE :
         {
             fprintf (stk->memory_report_file, "=========================================\n"
                                               "new address : 0x%p\n"
@@ -32,7 +32,7 @@ void memory_report (Stack_t *stk, Status_of_change status)
                                               stk->capacity);
             break;
         }
-    case FREE_:
+        case FREE_:
         {
             fprintf (stk->memory_report_file, "=========================================\n"
                                               "FREE\n"
@@ -40,7 +40,7 @@ void memory_report (Stack_t *stk, Status_of_change status)
                                               stk);
             break;
         }
-    default:
+        default:
         {
             printf("Not correct status");
             assert(0);
@@ -58,6 +58,7 @@ void stack_assert_func(Stack_t *stk)
 
     if (stack_error(stk) == DATA_ERROR)
     {
+
         STACK_DUMP(stk);
         dtor(stk);
         assert(0);
@@ -65,14 +66,14 @@ void stack_assert_func(Stack_t *stk)
 
     if (!check_hash(stk))
     {
-        fputs("Values were damaged", stk->dump_file);
+        fputs("Values were damaged <Check hash>\n", stk->dump_file);
         dtor(stk);
         assert(0);
     }
 
     if (*stk->left_canary != DED || *stk->right_canary != EDA)
     {
-        fputs("Values were damaged", stk->dump_file);
+        fputs("Values were damaged <Canary check>\n", stk->dump_file);
         dtor(stk);
         assert(0);
     }
@@ -84,16 +85,30 @@ void stack_dump (Stack_t *stk, int line, const char* file)
     fprintf (stk->dump_file, "=========================================\n"
                              "file : %s\n"
                              "line : %d\n"
-                             "stack_structure : 0x%p\n"
-                             "capacity : %u\n"
-                             "size : %u\n"
-                             "hash : %lu\n",
+                             "address stack_structure : 0x%p\n"
+                             "size : %u,  address size : 0x%p\n"
+                             "capacity : %u,  address capacity : 0x%p\n"
+                             "address dump file : 0x%p\n"
+                             "address memory report file 0x%p\n"
+                             "hash : %lu, address hash : 0x%p\n"
+                             "poison : %f, address poison : 0x%p\n"
+                             "address pointer left canary : 0x%p\n"
+                             "address pointer right canary : 0x%p\n",
                              file,
                              line,
                              stk,
-                             stk->capacity,
                              stk->size,
-                             stk->hash_current);
+                             &stk->size,
+                             stk->capacity,
+                             &stk->capacity,
+                             &stk->dump_file,
+                             &stk->memory_report_file,
+                             stk->hash_current,
+                             &stk->hash_current,
+                             stk->poison,
+                             &stk->poison,
+                             &stk->left_canary,
+                             &stk->right_canary);
 
 
     if (stk->data)
